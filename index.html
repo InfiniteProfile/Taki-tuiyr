@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Taki · Tuiyr</title>
+<style>
+  :root{
+    --void:#0b0b0d;
+    --panel:#131316;
+    --panel-2:#1a1a1e;
+    --gold:#c8a565;
+    --gold-soft:#e8d5a8;
+    --teal:#1f5c58;
+    --teal-bright:#3fa89e;
+    --ink:#e9e6df;
+    --ink-dim:#8d8a83;
+    --line:rgba(200,165,101,0.14);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(63,168,158,0.08), transparent 60%),
+      radial-gradient(1000px 500px at 90% 0%, rgba(200,165,101,0.07), transparent 55%),
+      var(--void);
+    color:var(--ink);
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  @font-face{
+    font-family:'DisplaySerif';
+    src:local('Cormorant Garamond');
+  }
+  .noise{
+    position:fixed; inset:0; pointer-events:none; opacity:0.035; z-index:1;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  header.hero{
+    position:relative; z-index:2;
+    padding:64px 24px 40px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:0.32em; text-transform:uppercase;
+    color:var(--teal-bright); font-weight:600; margin-bottom:14px;
+  }
+  h1.title{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:600;
+    font-size:clamp(38px, 7vw, 64px);
+    letter-spacing:0.04em;
+    margin:0;
+    background:linear-gradient(120deg, var(--gold-soft), var(--gold) 45%, var(--ink) 90%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .title .dot{ color:var(--teal-bright); -webkit-text-fill-color:var(--teal-bright); }
+  .subline{
+    margin-top:14px; color:var(--ink-dim); font-size:14px; letter-spacing:0.02em;
+  }
+  .counter{
+    display:inline-block; margin-top:22px; padding:8px 18px;
+    border:1px solid var(--line); border-radius:999px;
+    font-size:12px; letter-spacing:0.08em; color:var(--gold-soft);
+    background:rgba(200,165,101,0.05);
+  }
+
+  main{ max-width:1400px; margin:0 auto; padding:44px 20px 30px; position:relative; z-index:2; }
+
+  .group-header{
+    grid-column:1/-1;
+    display:flex; align-items:center; gap:16px;
+    margin:34px 0 18px;
+    padding-top: 8px;
+  }
+  .group-header:first-child{ margin-top:0; }
+  .group-header .line{ flex:1; height:1px; background:linear-gradient(90deg, var(--line), transparent); }
+  .group-header h2{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-weight:600; font-size:22px; letter-spacing:0.03em;
+    color:var(--gold-soft); margin:0; white-space:nowrap;
+  }
+  .group-header .tag{
+    font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--ink-dim); border:1px solid var(--line); border-radius:999px;
+    padding:3px 9px; white-space:nowrap;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(148px, 1fr));
+    gap:18px;
+    min-height:320px;
+  }
+  @media (min-width:640px){ .grid{ grid-template-columns:repeat(auto-fill, minmax(168px, 1fr)); gap:22px; } }
+
+  .card{
+    position:relative;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    cursor:pointer;
+    background:var(--panel);
+    isolation:isolate;
+    animation:rise 0.5s ease both;
+  }
+  @keyframes rise{ from{ opacity:0; transform:translateY(10px) scale(0.97);} to{ opacity:1; transform:none; } }
+
+  .card::before{
+    content:'';
+    position:absolute; inset:-3px; border-radius:50%; z-index:0;
+    background:conic-gradient(from var(--ang,0deg), var(--gold) 0deg, transparent 60deg, var(--teal-bright) 180deg, transparent 260deg, var(--gold) 360deg);
+    opacity:0.55;
+    transition:opacity .35s ease;
+  }
+  .card:hover::before{ opacity:1; animation:spin 2.6s linear infinite; }
+  @keyframes spin{ to{ --ang:360deg; } }
+
+  .card .ring{
+    position:absolute; inset:3px; border-radius:50%; overflow:hidden;
+    background:var(--panel-2);
+    z-index:1;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
+  .card img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    opacity:0; transition:opacity .5s ease, transform .5s ease;
+  }
+  .card img.loaded{ opacity:1; }
+  .card:hover img{ transform:scale(1.08); }
+
+  .card .shimmer{
+    position:absolute; inset:3px; border-radius:50%; z-index:1;
+    background:linear-gradient(110deg, var(--panel) 30%, var(--panel-2) 50%, var(--panel) 70%);
+    background-size:200% 100%;
+    animation:shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes shimmer{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  .card.ready .shimmer{ display:none; }
+
+  .empty-note{
+    grid-column:1/-1; text-align:center; color:var(--ink-dim); padding:60px 0; font-size:14px;
+  }
+
+  nav.pagination{
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+    gap:6px; margin:52px 0 20px; position:relative; z-index:2;
+  }
+  .pg-btn{
+    min-width:38px; height:38px; padding:0 10px;
+    display:inline-flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:10px;
+    background:var(--panel); color:var(--ink-dim);
+    font-size:13px; cursor:pointer; user-select:none;
+    transition:all .2s ease;
+  }
+  .pg-btn:hover{ border-color:var(--gold); color:var(--gold-soft); }
+  .pg-btn.active{
+    background:linear-gradient(135deg, var(--gold), #a9814a);
+    color:#1a1408; border-color:transparent; font-weight:600;
+  }
+  .pg-btn.disabled{ opacity:0.3; pointer-events:none; }
+  .pg-ellipsis{ color:var(--ink-dim); padding:0 4px; font-size:13px; }
+
+  footer.foot{
+    text-align:center; padding:30px 20px 50px; color:var(--ink-dim);
+    font-size:11px; letter-spacing:0.08em; position:relative; z-index:2;
+  }
+
+  .lightbox{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(6,6,7,0.96);
+    backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  .lightbox.open{ opacity:1; pointer-events:auto; }
+  .lightbox img{
+    max-width:min(92vw, 900px); max-height:88vh;
+    object-fit:contain; border-radius:6px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.6);
+    opacity:0; transform:scale(0.96); transition:opacity .35s ease, transform .35s ease;
+  }
+  .lightbox img.shown{ opacity:1; transform:none; }
+  .lightbox .close, .lightbox .arrow{
+    position:absolute; color:var(--ink); background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12);
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:20px; transition:background .2s ease;
+  }
+  .lightbox .close{ top:22px; right:22px; }
+  .lightbox .close:hover, .lightbox .arrow:hover{ background:rgba(255,255,255,0.14); }
+  .lightbox .arrow.prev{ left:16px; top:50%; transform:translateY(-50%); }
+  .lightbox .arrow.next{ right:16px; top:50%; transform:translateY(-50%); }
+  @media (max-width:640px){ .lightbox .arrow{ width:38px; height:38px; font-size:16px; } }
+  .lightbox .idx{
+    position:absolute; bottom:22px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:var(--ink-dim); letter-spacing:0.08em;
+  }
+  .lightbox .spinner{
+    position:absolute; width:28px; height:28px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.15); border-top-color:var(--gold);
+    animation:spin2 0.8s linear infinite;
+  }
+  @keyframes spin2{ to{ transform:rotate(360deg); } }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<header class="hero">
+  <div class="eyebrow">InfiniteProfile · Archive</div>
+  <h1 class="title">Taki <span class="dot">·</span> Tuiyr</h1>
+  <div class="subline">A private collection, arranged one frame at a time.</div>
+  <div class="counter" id="counterLabel">Loading archive…</div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <nav class="pagination" id="pagination"></nav>
+</main>
+
+<footer class="foot">TAKI · TUIYR — INFINITEPROFILE ARCHIVE</footer>
+
+<div class="lightbox" id="lightbox">
+  <div class="close" id="lbClose">✕</div>
+  <div class="arrow prev" id="lbPrev">‹</div>
+  <div class="spinner" id="lbSpinner" style="display:none;"></div>
+  <img id="lbImg" alt="">
+  <div class="arrow next" id="lbNext">›</div>
+  <div class="idx" id="lbIdx"></div>
+</div>
+
+<link rel="preconnect" href="https://raw.githubusercontent.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     1. CONFIG — edit these to point at a different repo/branch
+     ========================================================= */
+  const CONFIG = {
+    owner: "InfiniteProfile",
+    repo: "Taki-tuiyr",
+    branch: "main",
+    perPage: 30,          // profiles per page (20-40 range)
+    pageWindow: 2         // how many page numbers to show around current
+  };
+
+  function rawUrl(filename){
+    return `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${encodeURIComponent(filename)}`;
+  }
+  function blobUrl(filename){
+    return `https://github.com/${CONFIG.owner}/${CONFIG.repo}/blob/${CONFIG.branch}/${encodeURIComponent(filename)}`;
+  }
+
+  /* =========================================================
+     2. DATA — modular entry list.
+     Each entry is either:
+       { name: "Some Name" }      -> starts/continues a header
+       { file: "photo.jpg" }      -> an image under the last header
+                                     (or headerless if none set yet)
+     To add a new named section later, just insert a {name:"..."}
+     entry before the relevant files. Nothing else needs to change.
+     ========================================================= */
+  const ENTRIES = [{"file": "FB_IMG_1784346786779.jpg"}, {"file": "FB_IMG_1784346790484.jpg"}, {"file": "FB_IMG_1784346813196.jpg"}, {"file": "FB_IMG_1784346819107.jpg"}, {"file": "FB_IMG_1784346822331.jpg"}, {"file": "FB_IMG_1784346824132.jpg"}, {"file": "FB_IMG_1784346826335.jpg"}, {"file": "FB_IMG_1784346870849.jpg"}, {"file": "FB_IMG_1784359627936.jpg"}, {"file": "FB_IMG_1784359635256.jpg"}, {"file": "FB_IMG_1784359638995.jpg"}, {"file": "FB_IMG_1784359643927.jpg"}, {"file": "FB_IMG_1784359649273.jpg"}, {"file": "FB_IMG_1784359652623.jpg"}, {"file": "FB_IMG_1784359656105.jpg"}, {"file": "FB_IMG_1784359659632.jpg"}, {"file": "FB_IMG_1784359663378.jpg"}, {"file": "FB_IMG_1784359670097.jpg"}, {"file": "FB_IMG_1784359673717.jpg"}, {"file": "FB_IMG_1784359677837.jpg"}, {"file": "FB_IMG_1784359688310.jpg"}, {"file": "FB_IMG_1784359690242.jpg"}, {"file": "FB_IMG_1784359692751.jpg"}, {"file": "FB_IMG_1784359694891.jpg"}, {"file": "FB_IMG_1784359696705.jpg"}, {"file": "FB_IMG_1784359699536.jpg"}, {"file": "FB_IMG_1784359701249.jpg"}, {"file": "FB_IMG_1784359703179.jpg"}, {"file": "FB_IMG_1784359705143.jpg"}, {"file": "FB_IMG_1784359706826.jpg"}, {"file": "FB_IMG_1784359708826.jpg"}, {"file": "FB_IMG_1784359710635.jpg"}, {"file": "FB_IMG_1784359712611.jpg"}, {"file": "FB_IMG_1784359714312.jpg"}, {"file": "FB_IMG_1784395960642.jpg"}, {"file": "FB_IMG_1784395968400.jpg"}, {"file": "FB_IMG_1784395995551.jpg"}, {"file": "FB_IMG_1784396010676.jpg"}, {"file": "FB_IMG_1784396015917.jpg"}, {"file": "FB_IMG_1784396023847.jpg"}, {"file": "FB_IMG_1784396026009.jpg"}, {"file": "FB_IMG_1784396027980.jpg"}, {"file": "FB_IMG_1784396030007.jpg"}, {"file": "FB_IMG_1784396032100.jpg"}, {"file": "FB_IMG_1784396034036.jpg"}, {"file": "FB_IMG_1784396035991.jpg"}, {"file": "FB_IMG_1784396037977.jpg"}, {"file": "FB_IMG_1784396045908.jpg"}, {"file": "FB_IMG_1784396052992.jpg"}, {"file": "FB_IMG_1784396057187.jpg"}, {"file": "FB_IMG_1784396058452.jpg"}, {"file": "FB_IMG_1784396063696.jpg"}, {"file": "FB_IMG_1784396072494.jpg"}, {"file": "FB_IMG_1784396075062.jpg"}, {"file": "FB_IMG_1784396076297.jpg"}, {"file": "FB_IMG_1784396079684.jpg"}, {"file": "FB_IMG_1784396082069.jpg"}, {"file": "FB_IMG_1784396085704.jpg"}, {"file": "FB_IMG_1784396137635.jpg"}, {"file": "FB_IMG_1784396138338.jpg"}, {"file": "FB_IMG_1784396141018.jpg"}, {"file": "FB_IMG_1784396143884.jpg"}, {"file": "FB_IMG_1784396144338.jpg"}, {"file": "FB_IMG_1784396145722.jpg"}, {"file": "FB_IMG_1784396147655.jpg"}, {"file": "FB_IMG_1784396149708.jpg"}, {"file": "FB_IMG_1784396153422.jpg"}, {"file": "FB_IMG_1784396155484.jpg"}, {"file": "FB_IMG_1784396158045.jpg"}, {"file": "FB_IMG_1784396159611.jpg"}, {"file": "FB_IMG_1784396162029.jpg"}, {"file": "FB_IMG_1784396163816.jpg"}, {"file": "FB_IMG_1784396165690.jpg"}, {"file": "FB_IMG_1784396188829.jpg"}, {"file": "FB_IMG_1784396193217.jpg"}, {"file": "FB_IMG_1784396198019.jpg"}, {"file": "FB_IMG_1784396199972.jpg"}, {"file": "FB_IMG_1784396202033.jpg"}, {"file": "FB_IMG_1784396207826.jpg"}, {"file": "FB_IMG_1784396228198.jpg"}, {"file": "FB_IMG_1784396230586.jpg"}, {"file": "FB_IMG_1784396246653.jpg"}, {"file": "FB_IMG_1784396249677.jpg"}, {"file": "FB_IMG_1784396252470.jpg"}, {"file": "FB_IMG_1784396254265.jpg"}, {"file": "FB_IMG_1784396257278.jpg"}, {"file": "FB_IMG_1784396260638.jpg"}, {"file": "FB_IMG_1784396262510.jpg"}, {"file": "FB_IMG_1784396264438.jpg"}, {"file": "FB_IMG_1784396266373.jpg"}, {"file": "FB_IMG_1784396272541.jpg"}, {"file": "FB_IMG_1784396274739.jpg"}, {"file": "FB_IMG_1784396277017.jpg"}, {"file": "FB_IMG_1784396279110.jpg"}, {"file": "FB_IMG_1784396280886.jpg"}, {"file": "FB_IMG_1784396284171.jpg"}, {"file": "FB_IMG_1784396286067.jpg"}, {"file": "FB_IMG_1784396287058.jpg"}, {"file": "FB_IMG_1784396291239.jpg"}, {"file": "FB_IMG_1784396293104.jpg"}, {"file": "FB_IMG_1784396295174.jpg"}, {"file": "FB_IMG_1784396297323.jpg"}, {"file": "FB_IMG_1784396302135.jpg"}, {"file": "FB_IMG_1784396304442.jpg"}, {"file": "FB_IMG_1784396306186.jpg"}, {"file": "FB_IMG_1784396308131.jpg"}, {"file": "FB_IMG_1784396310018.jpg"}, {"file": "FB_IMG_1784396313162.jpg"}, {"file": "FB_IMG_1784396319304.jpg"}, {"file": "FB_IMG_1784396320981.jpg"}, {"file": "FB_IMG_1784396322873.jpg"}, {"file": "FB_IMG_1784396325195.jpg"}, {"file": "FB_IMG_1784396327921.jpg"}, {"file": "FB_IMG_1784396330105.jpg"}, {"file": "FB_IMG_1784396332159.jpg"}, {"file": "FB_IMG_1784396333943.jpg"}, {"file": "FB_IMG_1784396336121.jpg"}, {"file": "FB_IMG_1784396340915.jpg"}, {"file": "FB_IMG_1784396342776.jpg"}, {"file": "FB_IMG_1784396345867.jpg"}, {"file": "FB_IMG_1784396347273.jpg"}, {"file": "FB_IMG_1784396351827.jpg"}, {"file": "FB_IMG_1784396354098.jpg"}, {"file": "FB_IMG_1784396358896.jpg"}, {"file": "FB_IMG_1784396360937.jpg"}, {"file": "FB_IMG_1784396363339.jpg"}, {"file": "FB_IMG_1784396366188.jpg"}, {"file": "FB_IMG_1784396369357.jpg"}, {"file": "FB_IMG_1784396371387.jpg"}, {"file": "FB_IMG_1784396374718.jpg"}, {"file": "FB_IMG_1784396376772.jpg"}, {"file": "FB_IMG_1784396379836.jpg"}, {"file": "FB_IMG_1784396381825.jpg"}, {"file": "FB_IMG_1784396384011.jpg"}, {"file": "FB_IMG_1784396387116.jpg"}, {"file": "FB_IMG_1784396391074.jpg"}, {"file": "FB_IMG_1784396429763.jpg"}, {"file": "FB_IMG_1784396432990.jpg"}, {"file": "FB_IMG_1784396435514.jpg"}, {"file": "FB_IMG_1784396439720.jpg"}, {"file": "FB_IMG_1784396439976.jpg"}, {"file": "FB_IMG_1784396442176.jpg"}, {"file": "FB_IMG_1784396444748.jpg"}, {"file": "FB_IMG_1784396446544.jpg"}, {"file": "FB_IMG_1784396449296.jpg"}, {"file": "FB_IMG_1784396451334.jpg"}, {"file": "FB_IMG_1784396453468.jpg"}, {"file": "FB_IMG_1784396456157.jpg"}, {"file": "FB_IMG_1784396458206.jpg"}, {"file": "FB_IMG_1784396460446.jpg"}, {"file": "FB_IMG_1784396462722.jpg"}, {"file": "FB_IMG_1784396464655.jpg"}, {"file": "FB_IMG_1784396468078.jpg"}, {"file": "FB_IMG_1784396472768.jpg"}, {"file": "FB_IMG_1784396475100.jpg"}, {"file": "FB_IMG_1784396486839.jpg"}, {"file": "FB_IMG_1784396489202.jpg"}, {"file": "FB_IMG_1784396491510.jpg"}, {"file": "FB_IMG_1784396494229.jpg"}, {"file": "FB_IMG_1784396496678.jpg"}, {"file": "FB_IMG_1784396499660.jpg"}, {"file": "FB_IMG_1784396501846.jpg"}, {"file": "FB_IMG_1784396503764.jpg"}, {"file": "FB_IMG_1784396506717.jpg"}, {"file": "FB_IMG_1784396508444.jpg"}, {"file": "FB_IMG_1784396510495.jpg"}, {"file": "FB_IMG_1784396513011.jpg"}, {"file": "FB_IMG_1784396514658.jpg"}, {"file": "FB_IMG_1784396519546.jpg"}, {"file": "FB_IMG_1784396524376.jpg"}, {"file": "FB_IMG_1784396526423.jpg"}, {"file": "FB_IMG_1784396528094.jpg"}, {"file": "FB_IMG_1784396530822.jpg"}, {"file": "FB_IMG_1784396533858.jpg"}, {"file": "FB_IMG_1784396540220.jpg"}, {"file": "FB_IMG_1784396542385.jpg"}, {"file": "FB_IMG_1784396546591.jpg"}, {"file": "FB_IMG_1784396551120.jpg"}, {"file": "FB_IMG_1784396552953.jpg"}, {"file": "FB_IMG_1784396555918.jpg"}, {"file": "FB_IMG_1784396558210.jpg"}, {"file": "FB_IMG_1784396561087.jpg"}, {"file": "FB_IMG_1784396565155.jpg"}, {"file": "FB_IMG_1784396567285.jpg"}, {"file": "FB_IMG_1784396568660.jpg"}, {"file": "FB_IMG_1784396574199.jpg"}, {"file": "FB_IMG_1784396576605.jpg"}, {"file": "FB_IMG_1784396583682.jpg"}, {"file": "FB_IMG_1784396586488.jpg"}, {"file": "FB_IMG_1784396589325.jpg"}, {"file": "FB_IMG_1784396594368.jpg"}, {"file": "FB_IMG_1784396596543.jpg"}, {"file": "FB_IMG_1784396599653.jpg"}, {"file": "FB_IMG_1784396601544.jpg"}, {"file": "FB_IMG_1784396603519.jpg"}, {"file": "FB_IMG_1784396605977.jpg"}, {"file": "FB_IMG_1784396608108.jpg"}, {"file": "FB_IMG_1784396609961.jpg"}, {"file": "FB_IMG_1784396612683.jpg"}, {"file": "FB_IMG_1784396614661.jpg"}, {"file": "FB_IMG_1784396617015.jpg"}, {"file": "FB_IMG_1784396619045.jpg"}, {"file": "FB_IMG_1784396624970.jpg"}, {"file": "FB_IMG_1784396626472.jpg"}, {"file": "FB_IMG_1784396629659.jpg"}, {"file": "FB_IMG_1784396633445.jpg"}, {"file": "FB_IMG_1784396636147.jpg"}, {"file": "FB_IMG_1784396638356.jpg"}, {"file": "FB_IMG_1784396640499.jpg"}, {"file": "FB_IMG_1784396644511.jpg"}, {"file": "FB_IMG_1784396646878.jpg"}, {"file": "FB_IMG_1784396648889.jpg"}, {"file": "FB_IMG_1784396651839.jpg"}, {"file": "FB_IMG_1784396654412.jpg"}, {"file": "FB_IMG_1784396657296.jpg"}, {"file": "FB_IMG_1784396661447.jpg"}, {"file": "FB_IMG_1784396664063.jpg"}, {"file": "FB_IMG_1784396670298.jpg"}, {"file": "FB_IMG_1784396674273.jpg"}, {"file": "FB_IMG_1784396679585.jpg"}, {"file": "FB_IMG_1784396681842.jpg"}, {"file": "FB_IMG_1784396687338.jpg"}, {"file": "FB_IMG_1784396687513.jpg"}, {"file": "FB_IMG_1784396690669.jpg"}, {"file": "FB_IMG_1784396692395.jpg"}, {"file": "FB_IMG_1784396694395.jpg"}, {"file": "FB_IMG_1784396697594.jpg"}, {"file": "FB_IMG_1784396698741.jpg"}, {"file": "FB_IMG_1784396700544.jpg"}, {"file": "FB_IMG_1784396702549.jpg"}, {"file": "FB_IMG_1784396704412.jpg"}, {"file": "FB_IMG_1784396706916.jpg"}, {"file": "FB_IMG_1784396708839.jpg"}, {"file": "FB_IMG_1784396710413.jpg"}, {"file": "FB_IMG_1784396712424.jpg"}, {"file": "FB_IMG_1784396714483.jpg"}, {"file": "FB_IMG_1784396716807.jpg"}, {"file": "FB_IMG_1784396718692.jpg"}, {"file": "FB_IMG_1784396720682.jpg"}, {"file": "FB_IMG_1784396722617.jpg"}, {"file": "FB_IMG_1784396725894.jpg"}, {"file": "FB_IMG_1784396726680.jpg"}, {"file": "FB_IMG_1784396766006.jpg"}, {"file": "FB_IMG_1784396777297.jpg"}, {"file": "FB_IMG_1784396781624.jpg"}, {"file": "FB_IMG_1784396782646.jpg"}, {"file": "FB_IMG_1784396782831.jpg"}, {"file": "FB_IMG_1784396782933.jpg"}, {"file": "FB_IMG_1784396787173.jpg"}, {"file": "FB_IMG_1784396788993.jpg"}, {"file": "FB_IMG_1784396790939.jpg"}, {"file": "FB_IMG_1784396793172.jpg"}, {"file": "FB_IMG_1784396800177.jpg"}, {"file": "FB_IMG_1784396800218.jpg"}, {"file": "FB_IMG_1784396804208.jpg"}, {"file": "FB_IMG_1784396806299.jpg"}, {"file": "FB_IMG_1784396810372.jpg"}, {"file": "FB_IMG_1784396810436.jpg"}, {"file": "FB_IMG_1784396814234.jpg"}, {"file": "FB_IMG_1784396816142.jpg"}, {"file": "FB_IMG_1784396817012.jpg"}, {"file": "FB_IMG_1784396818028.jpg"}, {"file": "FB_IMG_1784396819998.jpg"}, {"file": "FB_IMG_1784396823404.jpg"}, {"file": "FB_IMG_1784396824377.jpg"}, {"file": "FB_IMG_1784396825849.jpg"}, {"file": "FB_IMG_1784396830602.jpg"}, {"file": "FB_IMG_1784396832544.jpg"}, {"file": "FB_IMG_1784396835988.jpg"}, {"file": "FB_IMG_1784396836326.jpg"}, {"file": "FB_IMG_1784396840423.jpg"}, {"file": "FB_IMG_1784396841157.jpg"}, {"file": "FB_IMG_1784396845476.jpg"}, {"file": "FB_IMG_1784396846501.jpg"}, {"file": "FB_IMG_1784396848740.jpg"}, {"file": "FB_IMG_1784396851095.jpg"}, {"file": "FB_IMG_1784396854725.jpg"}, {"file": "FB_IMG_1784396856941.jpg"}, {"file": "FB_IMG_1784396860501.jpg"}, {"file": "FB_IMG_1784396860865.jpg"}, {"file": "FB_IMG_1784396862927.jpg"}, {"file": "FB_IMG_1784396868587.jpg"}, {"file": "FB_IMG_1784396868948.jpg"}, {"file": "FB_IMG_1784396870984.jpg"}, {"file": "FB_IMG_1784396873047.jpg"}, {"file": "FB_IMG_1784396874855.jpg"}, {"file": "FB_IMG_1784396876811.jpg"}, {"file": "FB_IMG_1784396878789.jpg"}, {"file": "FB_IMG_1784396881036.jpg"}, {"file": "FB_IMG_1784396882918.jpg"}, {"file": "FB_IMG_1784396885505.jpg"}, {"file": "FB_IMG_1784396901755.jpg"}, {"file": "FB_IMG_1784396904726.jpg"}, {"file": "FB_IMG_1784399145579.jpg"}, {"file": "FB_IMG_1784399180336.jpg"}, {"file": "FB_IMG_1784399301469.jpg"}, {"file": "FB_IMG_1784399303214.jpg"}, {"file": "FB_IMG_1784399305495.jpg"}, {"file": "FB_IMG_1784399307273.jpg"}, {"file": "FB_IMG_1784399309544.jpg"}, {"file": "FB_IMG_1784399311317.jpg"}, {"file": "FB_IMG_1784399313413.jpg"}, {"file": "FB_IMG_1784399317414.jpg"}, {"file": "FB_IMG_1784399319406.jpg"}, {"file": "FB_IMG_1784399321485.jpg"}, {"file": "FB_IMG_1784399323603.jpg"}, {"file": "FB_IMG_1784399329118.jpg"}, {"file": "FB_IMG_1784399340110.jpg"}, {"file": "FB_IMG_1784399343467.jpg"}, {"file": "FB_IMG_1784399347496.jpg"}, {"file": "FB_IMG_1784399347547.jpg"}, {"file": "FB_IMG_1784399348122.jpg"}, {"file": "FB_IMG_1784399350244.jpg"}, {"file": "FB_IMG_1784399350353.jpg"}, {"file": "FB_IMG_1784399350427.jpg"}, {"file": "FB_IMG_1784399352104.jpg"}, {"file": "FB_IMG_1784399359717.jpg"}, {"file": "FB_IMG_1784399364744.jpg"}, {"file": "FB_IMG_1784399364764.jpg"}, {"file": "FB_IMG_1784399368879.jpg"}, {"file": "FB_IMG_1784399370687.jpg"}, {"file": "FB_IMG_1784399370697.jpg"}, {"file": "FB_IMG_1784399372190.jpg"}, {"file": "FB_IMG_1784399372488.jpg"}, {"file": "FB_IMG_1784399462621.jpg"}, {"file": "FB_IMG_1784399464753.jpg"}, {"file": "FB_IMG_1784399466772.jpg"}, {"file": "FB_IMG_1784399468805.jpg"}, {"file": "FB_IMG_1784399471056.jpg"}, {"file": "FB_IMG_1784399472967.jpg"}, {"file": "FB_IMG_1784399474873.jpg"}, {"file": "FB_IMG_1784399476787.jpg"}, {"file": "FB_IMG_1784399480699.jpg"}, {"file": "FB_IMG_1784399481268.jpg"}, {"file": "FB_IMG_1784399554387.jpg"}, {"file": "FB_IMG_1784399555812.jpg"}, {"file": "FB_IMG_1784399559254.jpg"}, {"file": "FB_IMG_1784399563826.jpg"}, {"file": "FB_IMG_1784399564947.jpg"}, {"file": "FB_IMG_1784399565133.jpg"}, {"file": "FB_IMG_1784399566380.jpg"}, {"file": "FB_IMG_1784399567885.jpg"}, {"file": "FB_IMG_1784399569588.jpg"}, {"file": "FB_IMG_1784399571662.jpg"}, {"file": "FB_IMG_1784399573670.jpg"}, {"file": "FB_IMG_1784399575908.jpg"}, {"file": "FB_IMG_1784399577699.jpg"}, {"file": "FB_IMG_1784399579818.jpg"}, {"file": "FB_IMG_1784430861576.jpg"}, {"file": "FB_IMG_1784430866400.jpg"}, {"file": "FB_IMG_1784430872284.jpg"}, {"file": "FB_IMG_1784430874580.jpg"}, {"file": "FB_IMG_1784430876873.jpg"}, {"file": "FB_IMG_1784430880022.jpg"}, {"file": "FB_IMG_1784430885059.jpg"}, {"file": "FB_IMG_1784430901243.jpg"}, {"file": "FB_IMG_1784430906750.jpg"}, {"file": "FB_IMG_1784430937422.jpg"}, {"file": "FB_IMG_1784430942652.jpg"}, {"file": "FB_IMG_1784430947985.jpg"}, {"file": "FB_IMG_1784431724741.jpg"}, {"file": "FB_IMG_1784431733714.jpg"}, {"file": "FB_IMG_1784431735881.jpg"}, {"file": "FB_IMG_1784431761573.jpg"}, {"file": "FB_IMG_1784431763868.jpg"}, {"file": "FB_IMG_1784431772135.jpg"}, {"file": "FB_IMG_1784431774041.jpg"}, {"file": "FB_IMG_1784431783630.jpg"}, {"file": "FB_IMG_1784431795768.jpg"}, {"file": "FB_IMG_1784431797942.jpg"}, {"file": "FB_IMG_1784431800236.jpg"}, {"file": "FB_IMG_1784431809166.jpg"}, {"file": "FB_IMG_1784431815083.jpg"}, {"file": "FB_IMG_1784431824304.jpg"}, {"file": "FB_IMG_1784431840159.jpg"}, {"file": "FB_IMG_1784431844838.jpg"}, {"file": "FB_IMG_1784431849477.jpg"}, {"file": "FB_IMG_1784431855061.jpg"}, {"file": "FB_IMG_1784443904100.jpg"}, {"file": "FB_IMG_1784443920181.jpg"}, {"file": "FB_IMG_1784443922220.jpg"}, {"file": "FB_IMG_1784443924230.jpg"}, {"file": "FB_IMG_1784443926324.jpg"}, {"file": "FB_IMG_1784443937277.jpg"}, {"file": "FB_IMG_1784443982776.jpg"}, {"file": "FB_IMG_1784443985810.jpg"}, {"file": "FB_IMG_1784443987770.jpg"}, {"file": "FB_IMG_1784443990672.jpg"}, {"file": "FB_IMG_1784443991934.jpg"}, {"file": "FB_IMG_1784443993958.jpg"}, {"file": "FB_IMG_1784443995894.jpg"}, {"file": "FB_IMG_1784443998106.jpg"}, {"file": "FB_IMG_1784444000082.jpg"}, {"file": "FB_IMG_1784444002149.jpg"}, {"file": "FB_IMG_1784444004151.jpg"}, {"file": "FB_IMG_1784444006158.jpg"}, {"file": "FB_IMG_1784444008220.jpg"}, {"file": "FB_IMG_1784444010214.jpg"}, {"file": "FB_IMG_1784444012243.jpg"}, {"file": "FB_IMG_1784444014252.jpg"}, {"file": "FB_IMG_1784444016319.jpg"}, {"file": "FB_IMG_1784444018327.jpg"}, {"file": "FB_IMG_1784444020440.jpg"}, {"file": "FB_IMG_1784444022429.jpg"}, {"file": "FB_IMG_1784444024802.jpg"}, {"file": "FB_IMG_1784444026523.jpg"}, {"file": "FB_IMG_1784444028503.jpg"}, {"file": "FB_IMG_1784444032619.jpg"}, {"file": "FB_IMG_1784444034875.jpg"}, {"file": "FB_IMG_1784444038736.jpg"}, {"file": "FB_IMG_1784444045381.jpg"}, {"file": "FB_IMG_1784444047423.jpg"}, {"file": "FB_IMG_1784444049674.jpg"}, {"file": "FB_IMG_1784444051474.jpg"}, {"file": "FB_IMG_1784444054053.jpg"}, {"file": "FB_IMG_1784444055940.jpg"}, {"file": "FB_IMG_1784444058498.jpg"}, {"file": "FB_IMG_1784444060050.jpg"}, {"file": "FB_IMG_1784444061644.jpg"}, {"file": "FB_IMG_1784444063666.jpg"}, {"file": "FB_IMG_1784444065723.jpg"}, {"file": "FB_IMG_1784444067779.jpg"}, {"file": "FB_IMG_1784444069795.jpg"}, {"file": "FB_IMG_1784444071806.jpg"}, {"file": "FB_IMG_1784444073893.jpg"}, {"file": "FB_IMG_1784444075903.jpg"}, {"file": "FB_IMG_1784444077932.jpg"}, {"file": "FB_IMG_1784444079958.jpg"}, {"file": "FB_IMG_1784444082345.jpg"}, {"file": "FB_IMG_1784444086472.jpg"}, {"file": "FB_IMG_1784444088453.jpg"}, {"file": "FB_IMG_1784444090122.jpg"}, {"file": "FB_IMG_1784444092492.jpg"}, {"file": "FB_IMG_1784444094261.jpg"}, {"file": "FB_IMG_1784444096260.jpg"}, {"file": "FB_IMG_1784444098258.jpg"}, {"file": "FB_IMG_1784444100237.jpg"}, {"file": "FB_IMG_1784444102257.jpg"}, {"file": "FB_IMG_1784444104537.jpg"}, {"file": "FB_IMG_1784444106537.jpg"}, {"file": "FB_IMG_1784444108358.jpg"}, {"file": "FB_IMG_1784444110766.jpg"}, {"file": "FB_IMG_1784444112477.jpg"}, {"file": "FB_IMG_1784444114597.jpg"}, {"file": "FB_IMG_1784444116513.jpg"}, {"file": "FB_IMG_1784444118948.jpg"}, {"file": "FB_IMG_1784444120575.jpg"}, {"file": "FB_IMG_1784444122616.jpg"}, {"file": "FB_IMG_1784444124600.jpg"}, {"file": "FB_IMG_1784444126718.jpg"}, {"file": "FB_IMG_1784444128677.jpg"}, {"file": "FB_IMG_1784444131145.jpg"}, {"file": "FB_IMG_1784444133038.jpg"}, {"file": "FB_IMG_1784444137929.jpg"}, {"file": "FB_IMG_1784444139274.jpg"}, {"file": "FB_IMG_1784444141206.jpg"}, {"file": "FB_IMG_1784444142855.jpg"}, {"file": "FB_IMG_1784444144881.jpg"}, {"file": "FB_IMG_1784444145922.jpg"}, {"file": "FB_IMG_1784444147245.jpg"}, {"file": "FB_IMG_1784444174057.jpg"}, {"file": "FB_IMG_1784444183580.jpg"}, {"file": "FB_IMG_1784444185741.jpg"}, {"file": "FB_IMG_1784444187596.jpg"}, {"file": "FB_IMG_1784444189655.jpg"}, {"file": "FB_IMG_1784444191725.jpg"}, {"file": "FB_IMG_1784444193984.jpg"}, {"file": "FB_IMG_1784444195980.jpg"}, {"file": "FB_IMG_1784444197784.jpg"}, {"file": "FB_IMG_1784444200022.jpg"}, {"file": "FB_IMG_1784444201770.jpg"}, {"file": "FB_IMG_1784444203808.jpg"}, {"file": "FB_IMG_1784444205854.jpg"}, {"file": "FB_IMG_1784444207928.jpg"}, {"file": "FB_IMG_1784444209917.jpg"}, {"file": "FB_IMG_1784444212319.jpg"}, {"file": "FB_IMG_1784444214213.jpg"}, {"file": "FB_IMG_1784444216017.jpg"}, {"file": "FB_IMG_1784444218065.jpg"}, {"file": "FB_IMG_1784444220109.jpg"}, {"file": "FB_IMG_1784444222463.jpg"}, {"file": "FB_IMG_1784444224199.jpg"}, {"file": "FB_IMG_1784444226210.jpg"}, {"file": "FB_IMG_1784444228497.jpg"}, {"file": "FB_IMG_1784444230440.jpg"}, {"file": "FB_IMG_1784444232333.jpg"}, {"file": "FB_IMG_1784444234377.jpg"}, {"file": "FB_IMG_1784444236697.jpg"}, {"file": "FB_IMG_1784444239519.jpg"}, {"file": "FB_IMG_1784444240754.jpg"}, {"file": "FB_IMG_1784444242618.jpg"}, {"file": "FB_IMG_1784444244599.jpg"}, {"file": "FB_IMG_1784444246755.jpg"}, {"file": "FB_IMG_1784444248610.jpg"}, {"file": "FB_IMG_1784444251180.jpg"}, {"file": "FB_IMG_1784444252802.jpg"}, {"file": "FB_IMG_1784444255371.jpg"}, {"file": "FB_IMG_1784444257011.jpg"}, {"file": "FB_IMG_1784444258792.jpg"}, {"file": "FB_IMG_1784444260794.jpg"}, {"file": "FB_IMG_1784444262845.jpg"}, {"file": "FB_IMG_1784444265202.jpg"}, {"file": "FB_IMG_1784444267242.jpg"}, {"file": "FB_IMG_1784444271126.jpg"}, {"file": "FB_IMG_1784444273266.jpg"}, {"file": "FB_IMG_1784444273872.jpg"}, {"file": "FB_IMG_1784444275183.jpg"}, {"file": "FB_IMG_1784444277070.jpg"}, {"file": "FB_IMG_1784444279048.jpg"}, {"file": "FB_IMG_1784444281072.jpg"}, {"file": "FB_IMG_1784444283192.jpg"}, {"file": "FB_IMG_1784444285414.jpg"}, {"file": "FB_IMG_1784444287755.jpg"}, {"file": "FB_IMG_1784444289519.jpg"}, {"file": "FB_IMG_1784444291540.jpg"}, {"file": "FB_IMG_1784444293610.jpg"}, {"file": "FB_IMG_1784444295363.jpg"}, {"file": "FB_IMG_1784444300450.jpg"}, {"file": "FB_IMG_1784444303467.jpg"}, {"file": "FB_IMG_1784444305488.jpg"}, {"file": "FB_IMG_1784444307674.jpg"}, {"file": "FB_IMG_1784444309743.jpg"}, {"file": "FB_IMG_1784444311575.jpg"}, {"file": "FB_IMG_1784444313627.jpg"}, {"file": "FB_IMG_1784444317678.jpg"}, {"file": "FB_IMG_1784444320213.jpg"}, {"file": "FB_IMG_1784444321727.jpg"}, {"file": "FB_IMG_1784444323796.jpg"}, {"file": "FB_IMG_1784444325858.jpg"}, {"file": "FB_IMG_1784444327843.jpg"}, {"file": "FB_IMG_1784444330099.jpg"}, {"file": "FB_IMG_1784444333374.jpg"}, {"file": "FB_IMG_1784444333954.jpg"}, {"file": "FB_IMG_1784444335947.jpg"}, {"file": "FB_IMG_1784444338496.jpg"}, {"file": "FB_IMG_1784444340051.jpg"}, {"file": "FB_IMG_1784444342621.jpg"}, {"file": "FB_IMG_1784444344108.jpg"}, {"file": "FB_IMG_1784444346089.jpg"}, {"file": "FB_IMG_1784444348487.jpg"}, {"file": "FB_IMG_1784444350174.jpg"}, {"file": "FB_IMG_1784444352402.jpg"}, {"file": "FB_IMG_1784444354453.jpg"}, {"file": "FB_IMG_1784444356266.jpg"}, {"file": "FB_IMG_1784444400228.jpg"}, {"file": "FB_IMG_1784444402544.jpg"}, {"file": "FB_IMG_1784444404217.jpg"}, {"file": "FB_IMG_1784444406304.jpg"}, {"file": "FB_IMG_1784444408305.jpg"}, {"file": "FB_IMG_1784444410743.jpg"}, {"file": "FB_IMG_1784444412379.jpg"}, {"file": "FB_IMG_1784444414984.jpg"}, {"file": "FB_IMG_1784444416636.jpg"}, {"file": "FB_IMG_1784444418453.jpg"}, {"file": "FB_IMG_1784444420467.jpg"}, {"file": "FB_IMG_1784444422846.jpg"}, {"file": "FB_IMG_1784444424628.jpg"}, {"file": "FB_IMG_1784444426882.jpg"}, {"file": "FB_IMG_1784444429423.jpg"}, {"file": "FB_IMG_1784444431015.jpg"}, {"file": "FB_IMG_1784444432679.jpg"}, {"file": "FB_IMG_1784444434950.jpg"}, {"file": "FB_IMG_1784444436828.jpg"}, {"file": "FB_IMG_1784444439320.jpg"}, {"file": "FB_IMG_1784444441254.jpg"}, {"file": "FB_IMG_1784444443330.jpg"}, {"file": "FB_IMG_1784444445035.jpg"}, {"file": "FB_IMG_1784444447201.jpg"}, {"file": "FB_IMG_1784444448932.jpg"}, {"file": "FB_IMG_1784444450971.jpg"}, {"file": "FB_IMG_1784444453369.jpg"}, {"file": "FB_IMG_1784444455047.jpg"}, {"file": "FB_IMG_1784444457134.jpg"}, {"file": "FB_IMG_1784444459342.jpg"}, {"file": "FB_IMG_1784444461758.jpg"}, {"file": "FB_IMG_1784444463160.jpg"}, {"file": "FB_IMG_1784444465718.jpg"}, {"file": "FB_IMG_1784444467254.jpg"}, {"file": "FB_IMG_1784444469535.jpg"}, {"file": "FB_IMG_1784444471289.jpg"}, {"file": "FB_IMG_1784444473574.jpg"}, {"file": "FB_IMG_1784444475370.jpg"}, {"file": "FB_IMG_1784444477403.jpg"}, {"file": "FB_IMG_1784444479778.jpg"}, {"file": "FB_IMG_1784444481457.jpg"}, {"file": "FB_IMG_1784444483713.jpg"}, {"file": "FB_IMG_1784444485748.jpg"}, {"file": "FB_IMG_1784444487768.jpg"}, {"file": "FB_IMG_1784444489893.jpg"}, {"file": "FB_IMG_1784444491892.jpg"}, {"file": "FB_IMG_1784444493884.jpg"}, {"file": "FB_IMG_1784444496151.jpg"}, {"file": "FB_IMG_1784444497737.jpg"}, {"file": "FB_IMG_1784444499953.jpg"}, {"file": "FB_IMG_1784444502024.jpg"}, {"file": "FB_IMG_1784444508269.jpg"}, {"file": "FB_IMG_1784444509883.jpg"}, {"file": "FB_IMG_1784444511938.jpg"}, {"file": "FB_IMG_1784444516293.jpg"}, {"file": "FB_IMG_1784444518252.jpg"}, {"file": "FB_IMG_1784444520796.jpg"}, {"file": "FB_IMG_1784444522673.jpg"}, {"file": "FB_IMG_1784444524106.jpg"}, {"file": "FB_IMG_1784444528517.jpg"}, {"file": "FB_IMG_1784444532288.jpg"}, {"file": "FB_IMG_1784444534507.jpg"}, {"file": "FB_IMG_1784444536311.jpg"}, {"file": "FB_IMG_1784444538707.jpg"}, {"file": "FB_IMG_1784444540445.jpg"}, {"file": "FB_IMG_1784444542869.jpg"}, {"file": "FB_IMG_1784444544825.jpg"}, {"file": "FB_IMG_1784444547056.jpg"}, {"file": "FB_IMG_1784444548508.jpg"}, {"file": "FB_IMG_1784444550822.jpg"}, {"file": "FB_IMG_1784444552620.jpg"}, {"file": "FB_IMG_1784444554910.jpg"}, {"file": "FB_IMG_1784444556655.jpg"}, {"file": "FB_IMG_1784444559041.jpg"}, {"file": "FB_IMG_1784444562844.jpg"}, {"file": "FB_IMG_1784444565048.jpg"}, {"file": "FB_IMG_1784444567227.jpg"}, {"file": "FB_IMG_1784444569103.jpg"}, {"file": "FB_IMG_1784444570888.jpg"}, {"file": "FB_IMG_1784444573193.jpg"}, {"file": "FB_IMG_1784444575224.jpg"}, {"file": "FB_IMG_1784444577522.jpg"}, {"file": "FB_IMG_1784444579884.jpg"}, {"file": "FB_IMG_1784444581295.jpg"}, {"file": "FB_IMG_1784444585454.jpg"}, {"file": "FB_IMG_1784444587506.jpg"}, {"file": "FB_IMG_1784444589391.jpg"}, {"file": "FB_IMG_1784444591216.jpg"}, {"file": "FB_IMG_1784444593409.jpg"}, {"file": "FB_IMG_1784444595583.jpg"}, {"file": "FB_IMG_1784444597294.jpg"}, {"file": "FB_IMG_1784444599403.jpg"}, {"file": "FB_IMG_1784444607998.jpg"}, {"file": "FB_IMG_1784444610642.jpg"}, {"file": "FB_IMG_1784444614236.jpg"}, {"file": "FB_IMG_1784444618933.jpg"}, {"file": "FB_IMG_1784444620470.jpg"}, {"file": "FB_IMG_1784444622396.jpg"}, {"file": "FB_IMG_1784444626213.jpg"}, {"file": "FB_IMG_1784444628409.jpg"}, {"file": "FB_IMG_1784444630291.jpg"}, {"file": "FB_IMG_1784444633057.jpg"}, {"file": "FB_IMG_1784444634899.jpg"}, {"file": "FB_IMG_1784444636345.jpg"}, {"file": "FB_IMG_1784444638573.jpg"}, {"file": "FB_IMG_1784444642909.jpg"}, {"file": "FB_IMG_1784444644725.jpg"}, {"file": "FB_IMG_1784444646796.jpg"}, {"file": "FB_IMG_1784444648964.jpg"}, {"file": "FB_IMG_1784444652614.jpg"}, {"file": "FB_IMG_1784444655224.jpg"}, {"file": "FB_IMG_1784444657034.jpg"}, {"file": "FB_IMG_1784444658752.jpg"}, {"file": "FB_IMG_1784444661128.jpg"}, {"file": "FB_IMG_1784444662755.jpg"}, {"file": "FB_IMG_1784444665051.jpg"}, {"file": "FB_IMG_1784444667157.jpg"}, {"file": "FB_IMG_1784444669202.jpg"}, {"file": "FB_IMG_1784444671479.jpg"}, {"file": "FB_IMG_1784444673315.jpg"}, {"file": "FB_IMG_1784444674944.jpg"}, {"file": "FB_IMG_1784444677604.jpg"}, {"file": "FB_IMG_1784444679913.jpg"}, {"file": "FB_IMG_1784444681095.jpg"}, {"file": "FB_IMG_1784444683123.jpg"}, {"file": "FB_IMG_1784444685134.jpg"}, {"file": "FB_IMG_1784444687224.jpg"}, {"file": "FB_IMG_1784444689289.jpg"}, {"file": "FB_IMG_1784444691411.jpg"}, {"file": "FB_IMG_1784444693624.jpg"}, {"file": "FB_IMG_1784444697670.jpg"}, {"file": "FB_IMG_1784444699680.jpg"}, {"file": "FB_IMG_1784444701835.jpg"}, {"file": "FB_IMG_1784444703718.jpg"}, {"file": "FB_IMG_1784444705777.jpg"}, {"file": "FB_IMG_1784444708095.jpg"}, {"file": "FB_IMG_1784444709814.jpg"}, {"file": "FB_IMG_1784444712241.jpg"}, {"file": "FB_IMG_1784444713964.jpg"}, {"file": "FB_IMG_1784444716010.jpg"}, {"file": "FB_IMG_1784444718112.jpg"}, {"file": "FB_IMG_1784444720609.jpg"}, {"file": "FB_IMG_1784444722103.jpg"}, {"file": "FB_IMG_1784444724106.jpg"}, {"file": "FB_IMG_1784444725890.jpg"}, {"file": "FB_IMG_1784444730180.jpg"}, {"file": "FB_IMG_1784444732152.jpg"}, {"file": "FB_IMG_1784444734238.jpg"}, {"file": "FB_IMG_1784444736561.jpg"}, {"file": "FB_IMG_1784444738332.jpg"}, {"file": "FB_IMG_1784444740607.jpg"}, {"file": "FB_IMG_1784444742426.jpg"}, {"file": "FB_IMG_1784444744130.jpg"}, {"file": "FB_IMG_1784444746495.jpg"}, {"file": "FB_IMG_1784444748485.jpg"}, {"file": "FB_IMG_1784444750505.jpg"}, {"file": "FB_IMG_1784444752457.jpg"}, {"file": "FB_IMG_1784444754723.jpg"}, {"file": "FB_IMG_1784444757048.jpg"}, {"file": "FB_IMG_1784444758986.jpg"}, {"file": "FB_IMG_1784444760793.jpg"}, {"file": "FB_IMG_1784444762862.jpg"}, {"file": "FB_IMG_1784444764956.jpg"}, {"file": "FB_IMG_1784444767115.jpg"}, {"file": "FB_IMG_1784444769559.jpg"}, {"file": "FB_IMG_1784444770973.jpg"}, {"file": "FB_IMG_1784444772740.jpg"}, {"file": "FB_IMG_1784444775134.jpg"}, {"file": "FB_IMG_1784444776945.jpg"}, {"file": "FB_IMG_1784444778977.jpg"}, {"file": "FB_IMG_1784444780713.jpg"}, {"file": "FB_IMG_1784444782739.jpg"}, {"file": "FB_IMG_1784444784783.jpg"}, {"file": "FB_IMG_1784444786991.jpg"}, {"file": "FB_IMG_1784444789056.jpg"}, {"file": "FB_IMG_1784444790875.jpg"}, {"file": "FB_IMG_1784444793262.jpg"}, {"file": "FB_IMG_1784444795331.jpg"}, {"file": "FB_IMG_1784444797425.jpg"}, {"file": "FB_IMG_1784444799460.jpg"}, {"file": "FB_IMG_1784444801753.jpg"}, {"file": "FB_IMG_1784444803654.jpg"}, {"file": "FB_IMG_1784444805268.jpg"}, {"file": "FB_IMG_1784444807309.jpg"}, {"file": "FB_IMG_1784444809668.jpg"}, {"file": "FB_IMG_1784444811441.jpg"}, {"file": "FB_IMG_1784444813374.jpg"}, {"file": "FB_IMG_1784444815692.jpg"}, {"file": "FB_IMG_1784444819512.jpg"}, {"file": "FB_IMG_1784444821375.jpg"}, {"file": "FB_IMG_1784444823710.jpg"}, {"file": "FB_IMG_1784444825671.jpg"}, {"file": "FB_IMG_1784444827849.jpg"}, {"file": "FB_IMG_1784444829742.jpg"}, {"file": "FB_IMG_1784444831777.jpg"}, {"file": "FB_IMG_1784444833863.jpg"}, {"file": "FB_IMG_1784444835909.jpg"}, {"file": "FB_IMG_1784444838015.jpg"}, {"file": "FB_IMG_1784444840102.jpg"}, {"file": "FB_IMG_1784444842064.jpg"}, {"file": "FB_IMG_1784444844115.jpg"}, {"file": "FB_IMG_1784444846062.jpg"}, {"file": "FB_IMG_1784444848094.jpg"}, {"file": "FB_IMG_1784444850160.jpg"}, {"file": "FB_IMG_1784444852011.jpg"}, {"file": "FB_IMG_1784444854003.jpg"}, {"file": "FB_IMG_1784444856144.jpg"}, {"file": "FB_IMG_1784444858228.jpg"}, {"file": "FB_IMG_1784444860192.jpg"}, {"file": "FB_IMG_1784444862313.jpg"}, {"file": "FB_IMG_1784444864376.jpg"}, {"file": "FB_IMG_1784444866429.jpg"}, {"file": "FB_IMG_1784444868138.jpg"}, {"file": "FB_IMG_1784444870211.jpg"}, {"file": "FB_IMG_1784444872461.jpg"}, {"file": "FB_IMG_1784444874779.jpg"}, {"file": "FB_IMG_1784444876456.jpg"}, {"file": "FB_IMG_1784444878622.jpg"}, {"file": "FB_IMG_1784444880684.jpg"}, {"file": "FB_IMG_1784444882558.jpg"}, {"file": "FB_IMG_1784444884974.jpg"}, {"file": "FB_IMG_1784444886710.jpg"}, {"file": "FB_IMG_1784444888759.jpg"}, {"file": "FB_IMG_1784444890956.jpg"}, {"file": "FB_IMG_1784444892842.jpg"}, {"file": "FB_IMG_1784444894769.jpg"}, {"file": "FB_IMG_1784444897036.jpg"}, {"file": "FB_IMG_1784444898795.jpg"}, {"file": "FB_IMG_1784444900896.jpg"}, {"file": "FB_IMG_1784444903055.jpg"}, {"file": "FB_IMG_1784444904846.jpg"}, {"file": "FB_IMG_1784444906926.jpg"}, {"file": "FB_IMG_1784444909025.jpg"}, {"file": "FB_IMG_1784444911010.jpg"}, {"file": "FB_IMG_1784444913123.jpg"}, {"file": "FB_IMG_1784444915175.jpg"}, {"file": "FB_IMG_1784444917173.jpg"}, {"file": "FB_IMG_1784444919045.jpg"}, {"file": "FB_IMG_1784444921297.jpg"}, {"file": "IMG_20260718_045607_318.jpg"}, {"file": "IMG_20260718_045610_211.jpg"}, {"file": "IMG_20260718_045612_875.jpg"}, {"file": "IMG_20260718_045618_310.jpg"}, {"file": "IMG_20260718_045620_676.jpg"}, {"file": "IMG_20260718_045622_874.jpg"}, {"file": "IMG_20260718_045625_093.jpg"}, {"file": "IMG_20260718_045627_421.jpg"}, {"file": "IMG_20260718_045630_335.jpg"}, {"file": "IMG_20260718_045632_530.jpg"}, {"file": "IMG_20260718_045634_878.jpg"}, {"file": "IMG_20260718_045637_207.jpg"}, {"file": "IMG_20260718_045639_581.jpg"}, {"file": "IMG_20260718_045641_966.jpg"}, {"file": "IMG_20260718_045644_169.jpg"}, {"file": "IMG_20260718_045646_469.jpg"}, {"file": "IMG_20260718_045656_896.jpg"}, {"file": "IMG_20260718_045659_241.jpg"}, {"file": "IMG_20260718_045745_565.jpg"}, {"file": "IMG_20260718_045750_031.jpg"}, {"file": "IMG_20260718_045753_480.jpg"}, {"file": "IMG_20260718_045755_947.jpg"}, {"file": "IMG_20260718_045758_046.jpg"}, {"file": "IMG_20260718_045826_746.jpg"}, {"file": "IMG_20260718_045828_514.jpg"}, {"file": "IMG_20260718_045830_029.jpg"}, {"file": "IMG_20260718_045832_096.jpg"}, {"file": "IMG_20260718_045833_679.jpg"}, {"file": "IMG_20260718_045835_246.jpg"}, {"file": "IMG_20260718_045836_733.jpg"}, {"file": "IMG_20260718_045838_095.jpg"}, {"file": "IMG_20260718_045839_613.jpg"}, {"file": "IMG_20260718_045844_612.jpg"}, {"file": "IMG_20260718_045846_096.jpg"}, {"file": "IMG_20260718_045849_080.jpg"}, {"file": "IMG_20260718_045850_731.jpg"}, {"file": "IMG_20260718_045852_763.jpg"}, {"file": "IMG_20260718_045854_430.jpg"}, {"file": "IMG_20260718_045856_080.jpg"}, {"file": "IMG_20260718_045901_546.jpg"}, {"file": "IMG_20260718_045903_098.jpg"}, {"file": "IMG_20260718_045904_546.jpg"}, {"file": "IMG_20260718_045906_046.jpg"}, {"file": "IMG_20260718_045911_113.jpg"}, {"file": "IMG_20260718_045912_697.jpg"}, {"file": "IMG_20260718_045914_363.jpg"}, {"file": "IMG_20260718_045916_016.jpg"}, {"file": "IMG_20260718_045917_665.jpg"}, {"file": "IMG_20260718_045925_436.jpg"}, {"file": "IMG_20260718_045934_779.jpg"}, {"file": "IMG_20260718_045936_480.jpg"}, {"file": "IMG_20260718_045938_130.jpg"}, {"file": "IMG_20260718_045939_830.jpg"}, {"file": "IMG_20260718_045943_846.jpg"}, {"file": "IMG_20260718_045945_863.jpg"}, {"file": "IMG_20260718_045947_546.jpg"}, {"file": "IMG_20260718_045953_542.jpg"}, {"file": "IMG_20260718_045955_096.jpg"}, {"file": "IMG_20260718_045956_646.jpg"}, {"file": "IMG_20260718_045958_046.jpg"}, {"file": "IMG_20260718_045959_495.jpg"}, {"file": "IMG_20260718_050000_962.jpg"}, {"file": "IMG_20260718_050005_912.jpg"}, {"file": "IMG_20260718_050008_876.jpg"}, {"file": "IMG_20260718_050010_379.jpg"}, {"file": "IMG_20260718_050011_713.jpg"}, {"file": "IMG_20260718_050013_329.jpg"}, {"file": "IMG_20260718_050015_229.jpg"}, {"file": "IMG_20260718_050016_796.jpg"}, {"file": "IMG_20260718_050019_551.jpg"}, {"file": "IMG_20260718_050021_083.jpg"}, {"file": "IMG_20260718_050023_113.jpg"}, {"file": "IMG_20260718_050024_947.jpg"}, {"file": "IMG_20260718_050112_612.jpg"}, {"file": "IMG_20260718_050114_346.jpg"}, {"file": "IMG_20260718_050115_880.jpg"}, {"file": "IMG_20260718_050117_429.jpg"}, {"file": "IMG_20260718_050118_979.jpg"}, {"file": "IMG_20260718_050120_512.jpg"}, {"file": "IMG_20260718_050121_998.jpg"}, {"file": "IMG_20260718_050135_030.jpg"}, {"file": "IMG_20260718_050145_212.jpg"}, {"file": "IMG_20260718_050146_812.jpg"}, {"file": "IMG_20260718_050148_262.jpg"}, {"file": "IMG_20260718_050149_729.jpg"}, {"file": "IMG_20260718_050151_199.jpg"}, {"file": "IMG_20260718_050231_729.jpg"}, {"file": "IMG_20260718_050233_747.jpg"}, {"file": "IMG_20260718_050235_798.jpg"}, {"file": "IMG_20260718_050238_003.jpg"}, {"file": "IMG_20260718_050239_346.jpg"}, {"file": "IMG_20260718_050242_491.jpg"}, {"file": "IMG_20260718_050244_576.jpg"}, {"file": "IMG_20260718_050246_526.jpg"}, {"file": "IMG_20260718_050249_100.jpg"}, {"file": "IMG_20260718_050251_078.jpg"}, {"file": "IMG_20260718_050301_680.jpg"}, {"file": "IMG_20260718_050303_691.jpg"}, {"file": "IMG_20260718_050305_657.jpg"}, {"file": "IMG_20260718_050307_655.jpg"}, {"file": "IMG_20260718_050310_790.jpg"}, {"file": "IMG_20260718_050312_788.jpg"}, {"file": "IMG_20260718_050314_777.jpg"}, {"file": "IMG_20260718_050317_123.jpg"}, {"file": "IMG_20260718_050319_051.jpg"}, {"file": "IMG_20260718_050320_939.jpg"}, {"file": "IMG_20260718_050322_872.jpg"}, {"file": "IMG_20260718_050332_931.jpg"}, {"file": "IMG_20260718_050338_477.jpg"}, {"file": "IMG_20260718_050340_480.jpg"}, {"file": "IMG_20260718_050342_474.jpg"}, {"file": "IMG_20260718_050344_385.jpg"}, {"file": "IMG_20260718_050346_358.jpg"}, {"file": "IMG_20260718_050348_513.jpg"}, {"file": "IMG_20260718_050349_996.jpg"}, {"file": "IMG_20260718_050351_980.jpg"}, {"file": "IMG_20260718_050354_613.jpg"}];
+
+  /* =========================================================
+     3. GROUPING LOGIC — build ordered groups from ENTRIES
+     ========================================================= */
+  function buildGroups(entries){
+    const groups = [];
+    let current = null;
+    entries.forEach(e => {
+      if (e.name !== undefined){
+        current = { name: e.name, images: [] };
+        groups.push(current);
+      } else if (e.file !== undefined){
+        if (!current){
+          current = { name: null, images: [] };
+          groups.push(current);
+        }
+        current.images.push(e.file);
+      }
+    });
+    return groups.filter(g => g.images.length > 0 || g.name);
+  }
+
+  const GROUPS = buildGroups(ENTRIES);
+  const TOTAL_IMAGES = GROUPS.reduce((n,g)=>n+g.images.length,0);
+
+  /* =========================================================
+     4. PAGINATION — split groups into pages of ~perPage images.
+     A group that spans a page boundary carries its header onto
+     the next page too, marked "continued".
+     ========================================================= */
+  function buildPages(groups, perPage){
+    const pages = [];
+    let page = [];
+    let count = 0;
+
+    groups.forEach(g => {
+      let imgs = g.images.slice();
+      let firstChunk = true;
+
+      if (imgs.length === 0){
+        page.push({ name: g.name, images: [], continued:false });
+        return;
+      }
+
+      while (imgs.length){
+        const space = perPage - count;
+        if (space <= 0){
+          pages.push(page);
+          page = [];
+          count = 0;
+        }
+        const room = perPage - count;
+        const chunk = imgs.splice(0, Math.max(room,1));
+        page.push({ name: g.name, images: chunk, continued: !firstChunk });
+        count += chunk.length;
+        firstChunk = false;
+      }
+    });
+    if (page.length) pages.push(page);
+    return pages.length ? pages : [[]];
+  }
+
+  const PAGES = buildPages(GROUPS, CONFIG.perPage);
+  const TOTAL_PAGES = PAGES.length;
+
+  /* =========================================================
+     5. RENDER STATE
+     ========================================================= */
+  const grid = document.getElementById('grid');
+  const paginationEl = document.getElementById('pagination');
+  const counterLabel = document.getElementById('counterLabel');
+  let currentPage = 1;
+  let pageObserver = null;
+  let currentPageFiles = []; // flat list of {file} for lightbox nav on this page
+
+  counterLabel.textContent = `${TOTAL_IMAGES.toLocaleString()} photographs · ${TOTAL_PAGES} pages`;
+
+  function renderPage(pageNum){
+    pageNum = Math.min(Math.max(1, pageNum), TOTAL_PAGES);
+    currentPage = pageNum;
+
+    /* --- memory cleanup: disconnect old observer & clear DOM --- */
+    if (pageObserver){ pageObserver.disconnect(); pageObserver = null; }
+    grid.querySelectorAll('img').forEach(img => { img.src=''; img.removeAttribute('src'); });
+    grid.innerHTML = '';
+
+    const blocks = PAGES[pageNum - 1] || [];
+    currentPageFiles = [];
+
+    if (blocks.every(b => b.images.length === 0)){
+      grid.innerHTML = '<div class="empty-note">No profiles on this page.</div>';
+    }
+
+    blocks.forEach(block => {
+      if (block.name){
+        const h = document.createElement('div');
+        h.className = 'group-header';
+        h.innerHTML = `<h2>${escapeHtml(block.name)}</h2>${block.continued ? '<span class="tag">continued</span>' : ''}<div class="line"></div>`;
+        grid.appendChild(h);
+      }
+      block.images.forEach(file => {
+        const idx = currentPageFiles.length;
+        currentPageFiles.push(file);
+        grid.appendChild(makeCard(file, idx));
+      });
+    });
+
+    /* --- lazy-load only what's near the viewport on this page --- */
+    pageObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting){
+          const card = entry.target;
+          const img = card.querySelector('img');
+          const src = card.dataset.src;
+          if (img && src && !img.src){
+            img.src = src;
+            img.onload = () => { img.classList.add('loaded'); card.classList.add('ready'); };
+            img.onerror = () => { card.classList.add('ready'); card.style.opacity='0.25'; };
+          }
+          obs.unobserve(card);
+        }
+      });
+    }, { root:null, rootMargin:'200px 0px', threshold:0.01 });
+
+    grid.querySelectorAll('.card').forEach(c => pageObserver.observe(c));
+
+    renderPagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function makeCard(file, idx){
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.src = rawUrl(file);
+    card.dataset.idx = idx;
+    card.style.setProperty('--ang','0deg');
+    card.innerHTML = `
+      <div class="shimmer"></div>
+      <div class="ring"><img alt="" loading="lazy" decoding="async"></div>
+    `;
+    card.addEventListener('click', () => openLightbox(idx));
+    return card;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* =========================================================
+     6. PAGINATION UI — windowed, with direct page access
+     ========================================================= */
+  function renderPagination(){
+    paginationEl.innerHTML = '';
+    if (TOTAL_PAGES <= 1) return;
+
+    const add = (label, page, opts={}) => {
+      const b = document.createElement('div');
+      b.className = 'pg-btn' + (opts.active ? ' active' : '') + (opts.disabled ? ' disabled' : '');
+      b.textContent = label;
+      if (!opts.disabled) b.addEventListener('click', () => renderPage(page));
+      paginationEl.appendChild(b);
+    };
+    const ellipsis = () => {
+      const s = document.createElement('span');
+      s.className = 'pg-ellipsis';
+      s.textContent = '···';
+      paginationEl.appendChild(s);
+    };
+
+    add('‹', currentPage - 1, { disabled: currentPage === 1 });
+
+    const w = CONFIG.pageWindow;
+    const pagesToShow = new Set([1, TOTAL_PAGES]);
+    for (let p = currentPage - w; p <= currentPage + w; p++){
+      if (p >= 1 && p <= TOTAL_PAGES) pagesToShow.add(p);
+    }
+    const sorted = Array.from(pagesToShow).sort((a,b)=>a-b);
+    let prev = 0;
+    sorted.forEach(p => {
+      if (prev && p - prev > 1) ellipsis();
+      add(String(p), p, { active: p === currentPage });
+      prev = p;
+    });
+
+    add('›', currentPage + 1, { disabled: currentPage === TOTAL_PAGES });
+  }
+
+  /* =========================================================
+     7. LIGHTBOX
+     ========================================================= */
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbSpinner = document.getElementById('lbSpinner');
+  const lbIdx = document.getElementById('lbIdx');
+  let lbCurrent = 0;
+
+  function openLightbox(idx){
+    lbCurrent = idx;
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    showLightboxImage();
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+    lbImg.classList.remove('shown');
+    lbImg.src = '';
+  }
+  function showLightboxImage(){
+    const file = currentPageFiles[lbCurrent];
+    if (!file) return;
+    lbImg.classList.remove('shown');
+    lbSpinner.style.display = 'block';
+    const url = rawUrl(file);
+    lbImg.onload = () => { lbSpinner.style.display='none'; lbImg.classList.add('shown'); };
+    lbImg.onerror = () => { lbSpinner.style.display='none'; };
+    lbImg.src = url;
+    lbIdx.textContent = `${lbCurrent + 1} / ${currentPageFiles.length}  ·  page ${currentPage} of ${TOTAL_PAGES}`;
+  }
+  function nextLightbox(delta){
+    lbCurrent = (lbCurrent + delta + currentPageFiles.length) % currentPageFiles.length;
+    showLightboxImage();
+  }
+
+  document.getElementById('lbClose').addEventListener('click', closeLightbox);
+  document.getElementById('lbPrev').addEventListener('click', () => nextLightbox(-1));
+  document.getElementById('lbNext').addEventListener('click', () => nextLightbox(1));
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') nextLightbox(-1);
+    if (e.key === 'ArrowRight') nextLightbox(1);
+  });
+
+  /* basic swipe support */
+  let touchStartX = null;
+  lightbox.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+  lightbox.addEventListener('touchend', e => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) nextLightbox(dx > 0 ? -1 : 1);
+    touchStartX = null;
+  }, {passive:true});
+
+  /* =========================================================
+     8. INIT
+     ========================================================= */
+  renderPage(1);
+
+})();
+</script>
+</body>
+</html>
